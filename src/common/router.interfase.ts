@@ -1,5 +1,5 @@
 import { Response, Request, Router, NextFunction } from 'express';
-import { IMiddleware } from '../middlewares/midleWare.interfase';
+import { IMiddleware } from '../middlewares/middleWare.interfase';
 
 export interface IControllerRoute {
 	path: string;

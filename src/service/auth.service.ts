@@ -1,48 +1,17 @@
-import { IUsers } from './../dto/user.dto';
+import { IUserResponseToClient, IUsers, UserRegister } from '../dto/user.dto';
 import { UserModel } from '../models/user.model';
 import { inject, injectable } from 'inversify';
 import { hash, compare } from 'bcryptjs';
 import { TokenServise } from './tokens.service';
 import 'reflect-metadata';
 import { TYPES } from '../types';
-import { IJwtTokens, IRefreshToken, IToken } from '../dto/token.dto';
-import { JwtPayload, verify } from 'jsonwebtoken';
-import { IUserPayload } from '../dto/userPayload.dto';
+import { IJwtTokens, IRefreshToken } from '../dto/token.dto';
+import { IRole } from '../dto/role.dto';
+import { Role } from '../models/role.dto';
 
 @injectable()
-export class UserService {
+export class AuthService {
 	constructor(@inject(TYPES.TokenServise) protected tokenServise: TokenServise) {}
-	async getAll() {
-		try {
-			return await UserModel.find();
-		} catch (err) {
-			return Promise.reject(err);
-		}
-	}
-
-	async putUser(userId: string, data: IUsers): Promise<IUsers | null> {
-		try {
-			return await UserModel.findByIdAndUpdate(userId, data, { returnDocument: 'after' });
-		} catch (err) {
-			return Promise.reject(err);
-		}
-	}
-
-	async deleteUser(id: string) {
-		try {
-			await UserModel.findByIdAndDelete(id);
-		} catch (err) {
-			return Promise.reject(err);
-		}
-	}
-
-	async getUser(id: string) {
-		try {
-			return await UserModel.findById(id);
-		} catch (err) {
-			return Promise.reject(err);
-		}
-	}
 
 	async searchByEmail(email: string): Promise<IUsers | null> {
 		return await UserModel.findOne({ email });
@@ -54,7 +23,7 @@ export class UserService {
 
 	async generateAndSaveTokens(id: string, email: string, role: string[]): Promise<IJwtTokens> {
 		try {
-			const tokens = this.tokenServise.generateTokens(email, role as string[], id);
+			const tokens = this.tokenServise.generateTokens(email, id, role);
 			await this.tokenServise.saveToken(id, tokens.refreshToken);
 			return tokens;
 		} catch (err) {
@@ -73,6 +42,42 @@ export class UserService {
 				const result = { ...tokens, user };
 				return result;
 			}
+		}
+	}
+	async addUsers(
+		param: UserRegister,
+		password: string,
+	): Promise<IUserResponseToClient & IJwtTokens> {
+		const { name, email } = param;
+
+		const hashPass = await hash(password, 7);
+		try {
+			let userRole = await this.findRole('user');
+			if (!userRole) {
+				userRole = await Role.create({ value: 'user' });
+			}
+
+			const user = await UserModel.create({
+				name,
+				email,
+				roles: [userRole.value],
+				password: hashPass,
+			});
+
+			const tokens = await this.generateAndSaveTokens(user._id, email, user.roles as string[]);
+
+			const result = { ...tokens, user };
+			return result;
+		} catch (err) {
+			return Promise.reject(err);
+		}
+	}
+
+	async findRole(val: string): Promise<IRole | null> {
+		try {
+			return await Role.findOne({ value: val });
+		} catch (err) {
+			return Promise.reject(err);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 export const TYPES = {
 	App: Symbol.for('App'),
-	UserController: Symbol.for('UserController'),
-	UserService: Symbol.for('UserService'),
+	AuthController: Symbol.for('AuthController'),
+	AuthService: Symbol.for('AuthService'),
 	TokenServise: Symbol.for('TokenServise'),
 };

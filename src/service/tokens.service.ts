@@ -1,13 +1,15 @@
 import { injectable } from 'inversify';
-import { JwtPayload, sign, verify } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import 'reflect-metadata';
 import { IJwtTokens } from '../dto/token.dto';
 import { IUserPayload } from '../dto/userPayload.dto';
 import { TokenModel } from '../models/tokens.model';
+import dotenv from 'dotenv';
+dotenv.config();
 
 @injectable()
 export class TokenServise {
-	generateTokens(email: string, role: string[], id: string): IJwtTokens {
+	generateTokens(email: string, id: string, role: string[]): IJwtTokens {
 		const payLoad = {
 			email,
 			role,
@@ -15,7 +17,7 @@ export class TokenServise {
 		};
 
 		const accesToken = sign(payLoad, process.env.SECRET!, {
-			expiresIn: '1d',
+			expiresIn: '1h',
 		});
 		const refreshToken = sign(payLoad, process.env.SECRET!, {
 			expiresIn: '15d',

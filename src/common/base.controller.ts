@@ -16,7 +16,7 @@ export abstract class BaseController {
 
 	public send<T>(res: Response, code: number, message: T) {
 		res.status(code);
-		return res.type('application/json').json(message);
+		return res.type('application/json').json({ message });
 	}
 
 	public ok<T>(res: Response, message: T) {
