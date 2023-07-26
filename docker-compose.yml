@@ -1,0 +1,33 @@
+version: '3'
+services:
+  nodeapp:
+    container_name: node_pdf
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    ports:
+      - '4000:4000'
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
+    environment:
+      WAIT_HOSTS: mongodb:27017
+    networks:
+      - node-webapp-network
+  mongodb:
+    container_name: mongodb
+    image: mongo
+    volumes:
+      - ~/mongo:/data/db
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_DATABASE=db
+    networks:
+      - node-webapp-network
+networks:
+  node-webapp-network:
+    driver: bridge
